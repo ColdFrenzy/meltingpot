@@ -22,16 +22,18 @@ import tree
 
 PLAYER_STR_FORMAT = 'player_{index}'
 _WORLD_PREFIX = 'WORLD.'
-
+OBSERVATION_TYPE = "RGB"
 
 def timestep_to_observations(timestep: dm_env.TimeStep) -> Mapping[str, Any]:
   gym_observations = {}
+  # for index, observation in enumerate(timestep.observation):
+  #   gym_observations[PLAYER_STR_FORMAT.format(index=index)] = {
+  #       key: value
+  #       for key, value in observation.items()
+  #       if _WORLD_PREFIX not in key
+  #   }
   for index, observation in enumerate(timestep.observation):
-    gym_observations[PLAYER_STR_FORMAT.format(index=index)] = {
-        key: value
-        for key, value in observation.items()
-        if _WORLD_PREFIX not in key
-    }
+    gym_observations[PLAYER_STR_FORMAT.format(index=index)] = observation[OBSERVATION_TYPE].transpose((2,0,1))
   return gym_observations
 
 

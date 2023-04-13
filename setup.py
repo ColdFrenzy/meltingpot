@@ -54,17 +54,17 @@ setuptools.setup(
     },
     python_requires='>=3.9',
     install_requires=[
-        'absl-py',
-        'chex',
-        'dm_env',
+        #'absl-py',
+        #'chex',
+        #'dm_env',
         # 'dmlab2d',  # Not yet available for PIP install.
-        'immutabledict',
-        'ml-collections',
-        'networkx',
-        'numpy',
-        'pygame',
-        'rx',
-        'tensorflow-macos' if IS_M1_MAC else 'tensorflow',
+        #'immutabledict',
+        #'ml-collections',
+        #'networkx',
+        #'numpy',
+        #'pygame',
+        #'rx',
+        #'tensorflow-macos' if IS_M1_MAC else 'tensorflow',
     ],
     extras_require={
         # Dependencies required for rllib example.

@@ -56,8 +56,11 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
         PLAYER_STR_FORMAT.format(index=index)
         for index in range(self._num_players)
     ]
+    self.individual_observation_names = env_config.individual_observation_names
     observation_space = utils.remove_world_observations_from_space(
         utils.spec_to_space(self._env.observation_spec()[0]))
+    # lru_cache is used to cache the observation and action spaces
+    # if the agent_id is the same.
     self.observation_space = functools.lru_cache(
         maxsize=None)(lambda agent_id: observation_space)
     action_space = utils.spec_to_space(self._env.action_spec()[0])
@@ -74,7 +77,7 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
     timestep = self._env.reset()
     self.agents = self.possible_agents[:]
     self.num_cycles = 0
-    return utils.timestep_to_observations(timestep)
+    return utils.timestep_to_observations(timestep, self.individual_observation_names)
 
   def step(self, action):
     """See base class."""
@@ -90,7 +93,7 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
     if done:
       self.agents = []
 
-    observations = utils.timestep_to_observations(timestep)
+    observations = utils.timestep_to_observations(timestep, self.individual_observation_names)
     return observations, rewards, dones, infos
 
   def close(self):

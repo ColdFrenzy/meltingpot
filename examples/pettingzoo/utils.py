@@ -14,8 +14,8 @@
 """PettingZoo interface to meltingpot environments."""
 
 import functools
-
-from gym import utils as gym_utils
+import numpy as np
+from gymnasium import utils as gym_utils
 import matplotlib.pyplot as plt
 from ml_collections import config_dict
 from pettingzoo import utils as pettingzoo_utils
@@ -48,8 +48,14 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
   """An adapter between Melting Pot substrates and PettingZoo's ParallelEnv."""
 
   def __init__(self, env_config, max_cycles):
+    """
+    :param env_config: A config dict for the environment.
+    :param max_cycles: The maximum number of cycles to run the environment for.
+    :param reward_type: The type of reward to use. Either "shared" or "individual".
+    """
     self.env_config = config_dict.ConfigDict(env_config)
     self.max_cycles = max_cycles
+    self.reward_type = env_config.reward_type
     self._env = substrate.build_from_config(self.env_config, roles =self.env_config.default_player_roles)
     self._num_players = len(self._env.observation_spec())
     self.possible_agents = [
@@ -81,7 +87,10 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
 
   def step(self, action):
     """See base class."""
-    actions = [action[agent] for agent in self.agents]
+    if isinstance(action, dict):
+      actions = [action[agent] for agent in self.agents]
+    else:
+      actions = [action[agent] for agent in range(self.num_agents)]
     timestep = self._env.step(actions)
     rewards = {
         agent: timestep.reward[index] for index, agent in enumerate(self.agents)
@@ -93,6 +102,8 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
     if done:
       self.agents = []
 
+    if self.reward_type == "shared":
+      rewards = sum([rewards[reward_key] for reward_key in rewards.keys()])/len(rewards) 
     observations = utils.timestep_to_observations(timestep, self.individual_observation_names)
     return observations, rewards, dones, infos
 
@@ -111,6 +122,22 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
         plt.savefig(filename)
       return None
     return rgb_arr
+
+  
+  def get_obs(self):
+    return [np.moveaxis(self._env.observation()[agent_id]["RGB"], -1, 0) for agent_id in range(self.num_agents)]
+  def get_state(self):
+    obs_concat = np.concatenate(self.get_obs(), axis=0).astype(
+              np.float32
+          )
+    return obs_concat
+  def get_avail_actions(self):
+    test = [np.ones(self._env.action_spec()[agent_id].num_values, dtype = self._env.action_spec()[agent_id].dtype) for agent_id in range(self.num_agents)]
+    return test
+  def get_state_size(self):
+    """Returns the size of the global state."""
+    obs_shape = self._env.observation()[0]["RGB"].shape
+    return (obs_shape[2] * self.num_agents, obs_shape[0], obs_shape[1])
 
 
 class _ParallelEnv(_MeltingPotPettingZooEnv, gym_utils.EzPickle):

@@ -83,6 +83,7 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
     timestep = self._env.reset()
     self.agents = self.possible_agents[:]
     self.num_cycles = 0
+    self.step_count = 0
     return utils.timestep_to_observations(timestep, self.individual_observation_names)
 
   def step(self, action):
@@ -96,6 +97,7 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
         agent: timestep.reward[index] for index, agent in enumerate(self.agents)
     }
     self.num_cycles += 1
+    self.step_count += 1
     done = timestep.last() or self.num_cycles >= self.max_cycles
     dones = {agent: done for agent in self.agents}
     infos = {agent: {} for agent in self.agents}
@@ -112,7 +114,7 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
     self._env.close()
 
   def render(self, mode='human', filename=None):
-    rgb_arr = self.state()['WORLD.RGB']
+    rgb_arr = self.state()[0]['WORLD.RGB']
     if mode == 'human':
       plt.cla()
       plt.imshow(rgb_arr, interpolation='nearest')

@@ -136,10 +136,19 @@ class _MeltingPotPettingZooEnv(pettingzoo_utils.ParallelEnv):
   def get_avail_actions(self):
     test = [np.ones(self._env.action_spec()[agent_id].num_values, dtype = self._env.action_spec()[agent_id].dtype) for agent_id in range(self.num_agents)]
     return test
+  def get_avail_agent_actions(self, agent_id):
+    return np.ones(self._env.action_spec()[agent_id].num_values, dtype = self._env.action_spec()[agent_id].dtype)
   def get_state_size(self):
     """Returns the size of the global state."""
     obs_shape = self._env.observation()[0]["RGB"].shape
     return (obs_shape[2] * self.num_agents, obs_shape[0], obs_shape[1])
+  def name_to_id(self, name):
+      idx = int(name.split("_")[1])
+      return idx
+
+  def idx_to_name(self, idx):
+      name = PLAYER_STR_FORMAT.format(index=idx)
+      return name
 
 
 class _ParallelEnv(_MeltingPotPettingZooEnv, gym_utils.EzPickle):
